@@ -1,4 +1,6 @@
 from langchain.llms import OpenAI
+from langchain.chains import ConversationChain
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 import os
 import streamlit as st
 from streamlit_chat import message
@@ -8,22 +10,30 @@ def open_file(filepath):
         return infile.read()
 
 os.environ["OPENAI_API_KEY"] = open_file('api_key.txt')
+llm = OpenAI(temperature=0.6)
 
-llm = OpenAI(temperature=0.9)
+conversation_with_summary = ConversationChain(
+    llm=llm, 
+    # We set a low k=2, to only keep the last 2 interactions in memory
+    memory=ConversationBufferWindowMemory(k=3), 
+    verbose=True
+)
+
 
 def get_ans(user_input):
-    ans = llm(user_input)
-    
+    ans = conversation_with_summary.predict(input=user_input)
     # print(ans) #to check ans 
-    return ans
+    return ans.strip()
 
-st.title("BayMax")
+st.title("Chandler the Bot")
 
 if 'generated' not in st.session_state:
     st.session_state['generated'] = []
 
 if 'past' not in st.session_state:
     st.session_state['past'] = []
+
+
 
 def get_text():
     input_text = st.text_input("You: ", key="input")
@@ -33,13 +43,12 @@ user_input = get_text()
 
 if user_input:
     output = get_ans(user_input)
-    #store the input and output
     st.session_state.past.append(user_input) 
     st.session_state.generated.append(output)
     
     
 if st.session_state['generated']:
-    
     for i in range(len(st.session_state['generated'])-1, -1, -1):
         message(st.session_state["generated"][i], key=str(i))
         message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
+

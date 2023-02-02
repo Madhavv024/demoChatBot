@@ -2,7 +2,12 @@ from langchain.llms import OpenAI
 import os
 import streamlit as st
 from streamlit_chat import message
-os.environ["OPENAI_API_KEY"] = "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"
+
+def open_file(filepath):
+    with open(filepath,'r',encoding='utf-8') as infile:
+        return infile.read()
+
+os.environ["OPENAI_API_KEY"] = open_file('api_key.txt')
 
 llm = OpenAI(temperature=0.9)
 
@@ -11,7 +16,7 @@ def get_ans(user_input):
     # print(ans) #to check ans 
     return ans
 
-st.title("ChatBot")
+st.title("BayMax")
 
 if 'generated' not in st.session_state:
     st.session_state['generated'] = []

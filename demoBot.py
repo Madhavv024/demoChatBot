@@ -13,6 +13,7 @@ llm = OpenAI(temperature=0.9)
 
 def get_ans(user_input):
     ans = llm(user_input)
+    
     # print(ans) #to check ans 
     return ans
 

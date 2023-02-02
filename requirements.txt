@@ -292,3 +292,4 @@ wsproto==1.2.0
 xxhash==3.2.0
 yarl==1.8.2
 zipp==3.10.0
+Streamlit==1.17.0

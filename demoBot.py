@@ -8,7 +8,7 @@ llm = OpenAI(temperature=0.9)
 
 def get_ans(user_input):
     ans = llm(user_input)
-    print(ans)
+    # print(ans) #to check ans 
     return ans
 
 st.title("ChatBot")
@@ -30,7 +30,8 @@ if user_input:
     #store the input and output
     st.session_state.past.append(user_input) 
     st.session_state.generated.append(output)
-
+    
+    
 if st.session_state['generated']:
     
     for i in range(len(st.session_state['generated'])-1, -1, -1):

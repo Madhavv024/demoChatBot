@@ -1,67 +1,87 @@
-from langchain.llms import OpenAI
+from langchain import OpenAI
 from langchain.chains import ConversationChain
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory , ConversationBufferMemory
 import os
 import streamlit as st
 from streamlit_chat import message
-from langchain import PromptTemplate
+from langchain import PromptTemplate , LLMChain
+import gradio as gr
 
 def open_file(filepath):
     with open(filepath,'r',encoding='utf-8') as infile:
         return infile.read()
 
-template = open_file('promp_chat.txt')
+template = template = """You are a Chandler having a conversation with a human.
+Chandler is a AI bot that has a very good sense of humor, and is notoriously sarcasm.
+
+{chat_history}
+Human: {human_input}
+Chandler:"""
 
 prompt = PromptTemplate(
-    input_variables=["Chandler"],
-    template=template,
+    input_variables=["chat_history", "human_input"],
+    template=template
 )
 
 os.environ["OPENAI_API_KEY"] = open_file('api_key.txt')
 llm = OpenAI(temperature=0.6)
 
-conversation_with_summary = ConversationChain(
+conversation_with_summary = LLMChain(
     llm=llm, 
     # We set a low k=3, to only keep the last 3 interactions in memory
-    memory=ConversationBufferWindowMemory(k=3), 
-    verbose=False
+    prompt=prompt,
+    memory = ConversationBufferWindowMemory(memory_key="chat_history" , k=3), 
+    verbose=True,
 )
 
 
 def get_ans(user_input):
-    ans = conversation_with_summary.predict(input=user_input)
+    ans = conversation_with_summary.predict(human_input=user_input)
     # print(ans) #to check ans 
     return ans.strip()
 
-st.title("Chandler the Bot")
+#console-------------------------------
+
+def get_text():
+    human_input = input("Enter your ques here: ")
+    # input_text = st.text_input("You: ", key="input")
+    return human_input
+
+user_input = ""
+
+negatives = ["bye" , "cya" , "take care" , "bye bye" , "now bye"]
+
+# while(user_input not in negatives):
+#     user_input = get_text()
+#     # if user_input:
+#     output = get_ans(user_input)
+#     print("Chandler: "+output)
+    # st.session_state.past.append(user_input) 
+    # st.session_state.generated.append(output)
+
+#streamlit-------------------
+
+# st.title("Chandler the Bot")
 
 # if 'generated' not in st.session_state:
 #     st.session_state['generated'] = []
 
 # if 'past' not in st.session_state:
 #     st.session_state['past'] = []
-
-
-
-def get_text():
-    input_text = input("Enter your ques here: ")
-    # input_text = st.text_input("You: ", key="input")
-    return input_text
-
-
-user_input = ""
-
-while(user_input!="bye"):
-    user_input = get_text()
-    # if user_input:
-    output = get_ans(user_input)
-    print("Chandler: "+output)
-    # st.session_state.past.append(user_input) 
-    # st.session_state.generated.append(output)
-    
     
 # if st.session_state['generated']:
 #     for i in range(len(st.session_state['generated'])-1, -1, -1):
 #         message(st.session_state["generated"][i], key=str(i))
 #         message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
+    
+#gradio-------------------------------------------    
+    
+def chatbot(input , history=[] ):
+    output = get_ans(input)
+    history.append((input,output))
+    return history , history
 
+gr.Interface(fn = chatbot ,
+             inputs = ["text" , 'state'],
+             outputs = ["chatbot" , 'state']
+             ).launch(debug = True) # share=True)
